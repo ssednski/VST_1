@@ -67,6 +67,9 @@ public:
     };
 
 private:
+    juce::dsp::Phaser<float> phaser;
+    juce::dsp::Chorus<float> chorus;
+    juce::dsp::LadderFilter<float> overdrive, ladderfilter;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VST_1AudioProcessor)
 };
