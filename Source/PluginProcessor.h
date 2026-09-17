@@ -56,6 +56,16 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    enum class DPS_Option
+    {
+        Phase,
+        Chorus,
+        Overdrive,
+        LadderFilter,
+        END_OF_LIST
+
+    };
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VST_1AudioProcessor)
