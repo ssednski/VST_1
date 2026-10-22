@@ -28,6 +28,12 @@
             file="Source/ParamPanel.cpp"/>
       <FILE id="pPnHdr" name="ParamPanel.h" compile="0" resource="0"
             file="Source/ParamPanel.h"/>
+      <FILE id="aUdTap" name="AudioTap.h" compile="0" resource="0"
+            file="Source/AudioTap.h"/>
+      <FILE id="sPcCpp" name="SpectrumAnalyser.cpp" compile="1" resource="0"
+            file="Source/SpectrumAnalyser.cpp"/>
+      <FILE id="sPcHdr" name="SpectrumAnalyser.h" compile="0" resource="0"
+            file="Source/SpectrumAnalyser.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

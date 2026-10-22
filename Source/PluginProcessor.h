@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "Overdrive.h"
+#include "AudioTap.h"
 
 //==============================================================================
 /**
@@ -83,6 +84,17 @@ public:
         The audio thread picks up the new order at the start of its next block. */
     void setDspOrder (const DSP_Order& newOrder);
 
+    //==============================================================================
+    /** Chooses which module's *input* is sent to the visualiser, i.e. the signal
+        after every module before it in the chain. Thread safe. */
+    void setAnalyserSource (DSP_Option option)  { analyserSource.store (static_cast<int> (option)); }
+
+    /** Turns sample capture on/off (the editor enables it while it is open). */
+    void setAnalyserEnabled (bool shouldBeEnabled) { analyserEnabled.store (shouldBeEnabled); }
+
+    /** Read from the message thread only. */
+    AudioTap& getAnalyserTap() noexcept { return analyserTap; }
+
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts { *this, nullptr, "Parameters", createParameterLayout() };
 
@@ -102,6 +114,10 @@ private:
     // Audio-thread-only copy of the order
     DSP_Order dspOrder = getDefaultDspOrder();
     juce::uint32 lastPackedOrder = 0xffffffff;
+
+    AudioTap analyserTap;
+    std::atomic<int> analyserSource { static_cast<int> (DSP_Option::Phaser) };
+    std::atomic<bool> analyserEnabled { false };
 
     //==============================================================================
     juce::dsp::Gain<float> inputGain, outputGain;

@@ -502,8 +502,15 @@ void VST_1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 
     inputGain.process (context);
 
+    auto tapOption = analyserEnabled.load() ? static_cast<DSP_Option> (analyserSource.load())
+                                            : DSP_Option::END_OF_LIST;
+
     for (auto option : dspOrder)
     {
+        // Capture the signal arriving at the selected module, before it is processed
+        if (option == tapOption)
+            analyserTap.push (block);
+
         switch (option)
         {
             case DSP_Option::Phaser:

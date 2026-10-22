@@ -13,7 +13,8 @@
 namespace
 {
     constexpr int headerHeight = 84;
-    constexpr int chainHeight = 132;
+    constexpr int chainHeight = 112;
+    constexpr int panelHeight = 220;
     constexpr int footerHeight = 30;
     constexpr int margin = 16;
 
@@ -74,9 +75,12 @@ VST_1AudioProcessorEditor::VST_1AudioProcessorEditor (VST_1AudioProcessor& p)
       audioProcessor (p),
       inputKnob (p.apvts, ParamIDs::inputGain, "INPUT"),
       outputKnob (p.apvts, ParamIDs::outputGain, "OUTPUT"),
-      chainView (p.apvts)
+      chainView (p.apvts),
+      analyser (p)
 {
     setLookAndFeel (&lookAndFeel);
+    audioProcessor.setAnalyserEnabled (true);
+    addAndMakeVisible (analyser);
 
     for (auto* knob : { &inputKnob, &outputKnob })
     {
@@ -86,7 +90,11 @@ VST_1AudioProcessorEditor::VST_1AudioProcessorEditor (VST_1AudioProcessor& p)
 
     chainView.setOrder (audioProcessor.getDspOrder(), false);
     chainView.onSelect = [this] (DSP_Option option) { selectModule (option); };
-    chainView.onOrderChanged = [this] (const VST_1AudioProcessor::DSP_Order& order) { audioProcessor.setDspOrder (order); };
+    chainView.onOrderChanged = [this] (const VST_1AudioProcessor::DSP_Order& order)
+    {
+        audioProcessor.setDspOrder (order);
+        updateAnalyserPathDescription();
+    };
     addAndMakeVisible (chainView);
 
     resetOrderButton.setTooltip ("Restore the default signal chain order");
@@ -95,6 +103,7 @@ VST_1AudioProcessorEditor::VST_1AudioProcessorEditor (VST_1AudioProcessor& p)
         auto order = VST_1AudioProcessor::getDefaultDspOrder();
         audioProcessor.setDspOrder (order);
         chainView.setOrder (order, true);
+        updateAnalyserPathDescription();
     };
     addAndMakeVisible (resetOrderButton);
 
@@ -110,7 +119,7 @@ VST_1AudioProcessorEditor::VST_1AudioProcessorEditor (VST_1AudioProcessor& p)
 
     selectModule (audioProcessor.getDspOrder()[0]);
 
-    setSize (920, 560);
+    setSize (920, 760);
     timerCallback();
     startTimerHz (20);
 }
@@ -118,6 +127,7 @@ VST_1AudioProcessorEditor::VST_1AudioProcessorEditor (VST_1AudioProcessor& p)
 VST_1AudioProcessorEditor::~VST_1AudioProcessorEditor()
 {
     stopTimer();
+    audioProcessor.setAnalyserEnabled (false);
     setLookAndFeel (nullptr);
 }
 
@@ -129,6 +139,34 @@ void VST_1AudioProcessorEditor::selectModule (DSP_Option option)
 
     for (int i = 0; i < VST_1AudioProcessor::numDspOptions; ++i)
         panels[(size_t) i]->setVisible (static_cast<DSP_Option> (i) == option);
+
+    audioProcessor.setAnalyserSource (option);
+    analyser.setSource (VST_1AudioProcessor::getDspOptionName (option), Palette::forOption (option));
+    updateAnalyserPathDescription();
+}
+
+void VST_1AudioProcessorEditor::updateAnalyserPathDescription()
+{
+    // Describe what the signal has passed through before reaching the selected module.
+    // Bypassed modules are skipped because they don't change the signal.
+    const juce::String arrow ("  >  ");
+    juce::StringArray stages { "IN" };
+
+    for (auto option : chainView.getOrder())
+    {
+        if (option == selectedModule)
+            break;
+
+        auto bypassID = VST_1AudioProcessor::getBypassParamID (option);
+        if (audioProcessor.apvts.getRawParameterValue (bypassID)->load() < 0.5f)
+            stages.add (VST_1AudioProcessor::getDspOptionName (option));
+    }
+
+    auto description = stages.joinIntoString (arrow);
+    if (stages.size() == 1)
+        description << "  (dry input)";
+
+    analyser.setPathDescription (description);
 }
 
 void VST_1AudioProcessorEditor::timerCallback()
@@ -147,6 +185,9 @@ void VST_1AudioProcessorEditor::timerCallback()
     // Only the peak filter uses the gain control
     auto filterType = static_cast<GeneralFilterType> (juce::roundToInt (apvts.getRawParameterValue (ParamIDs::filterType)->load()));
     panels[(size_t) DSP_Option::GeneralFilter]->setControlEnabled (ParamIDs::filterGain, filterType == GeneralFilterType::Peak);
+
+    // Bypass changes and host-driven reorders alter what feeds the analyser
+    updateAnalyserPathDescription();
 }
 
 void VST_1AudioProcessorEditor::dragOperationEnded (const juce::DragAndDropTarget::SourceDetails&)
@@ -208,9 +249,13 @@ void VST_1AudioProcessorEditor::resized()
     bounds.removeFromTop (6);
     chainView.setBounds (bounds.removeFromTop (chainHeight).expanded (margin, 0));
 
-    bounds.removeFromTop (margin);
+    bounds.removeFromTop (12);
     bounds.removeFromBottom (footerHeight);
 
+    auto panelArea = bounds.removeFromBottom (panelHeight);
     for (auto& panel : panels)
-        panel->setBounds (bounds);
+        panel->setBounds (panelArea);
+
+    bounds.removeFromBottom (12);
+    analyser.setBounds (bounds);
 }

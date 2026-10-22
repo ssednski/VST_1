@@ -13,6 +13,7 @@
 #include "LookAndFeel.h"
 #include "ChainView.h"
 #include "ParamPanel.h"
+#include "SpectrumAnalyser.h"
 
 //==============================================================================
 /**
@@ -35,6 +36,7 @@ private:
     void timerCallback() override;
     void dragOperationEnded (const juce::DragAndDropTarget::SourceDetails&) override;
     void selectModule (DSP_Option option);
+    void updateAnalyserPathDescription();
 
     struct GainKnob
     {
@@ -56,6 +58,7 @@ private:
 
     GainKnob inputKnob, outputKnob;
     ChainView chainView;
+    SpectrumAnalyser analyser;
     juce::TextButton resetOrderButton { "Reset Order" };
     std::array<std::unique_ptr<ParamPanel>, VST_1AudioProcessor::numDspOptions> panels; // indexed by DSP_Option
 
