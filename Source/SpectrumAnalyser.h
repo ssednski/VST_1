@@ -1,8 +1,8 @@
 /*
   ==============================================================================
 
-    Real-time spectrum analyser showing the signal arriving at the selected
-    module (i.e. after every module before it in the chain).
+    Real-time spectrum analyser showing the signal leaving the selected
+    module (i.e. after it and every module before it in the chain).
 
   ==============================================================================
 */

@@ -85,8 +85,8 @@ public:
     void setDspOrder (const DSP_Order& newOrder);
 
     //==============================================================================
-    /** Chooses which module's *input* is sent to the visualiser, i.e. the signal
-        after every module before it in the chain. Thread safe. */
+    /** Chooses which module's *output* is sent to the visualiser, i.e. the signal
+        after that module and every module before it in the chain. Thread safe. */
     void setAnalyserSource (DSP_Option option)  { analyserSource.store (static_cast<int> (option)); }
 
     /** Turns sample capture on/off (the editor enables it while it is open). */

@@ -1,8 +1,8 @@
 /*
   ==============================================================================
 
-    Real-time spectrum analyser showing the signal arriving at the selected
-    module (i.e. after every module before it in the chain).
+    Real-time spectrum analyser showing the signal leaving the selected
+    module (i.e. after it and every module before it in the chain).
 
   ==============================================================================
 */
@@ -189,7 +189,7 @@ void SpectrumAnalyser::paint (juce::Graphics& g)
 
     g.setFont (juce::Font (12.0f, juce::Font::bold));
     g.setColour (Palette::textDim);
-    auto prefix = juce::String ("INPUT TO ");
+    auto prefix = juce::String ("OUTPUT OF ");
     auto prefixWidth = g.getCurrentFont().getStringWidth (prefix);
     g.drawText (prefix, header.removeFromLeft (prefixWidth), juce::Justification::centredLeft);
 
@@ -263,7 +263,7 @@ void SpectrumAnalyser::paint (juce::Graphics& g)
     {
         g.setColour (Palette::textDim.withAlpha (0.8f));
         g.setFont (juce::Font (13.0f));
-        g.drawText ("No signal reaching this module", plotArea, juce::Justification::centred);
+        g.drawText ("No signal leaving this module", plotArea, juce::Justification::centred);
     }
 }
 

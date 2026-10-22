@@ -507,10 +507,6 @@ void VST_1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 
     for (auto option : dspOrder)
     {
-        // Capture the signal arriving at the selected module, before it is processed
-        if (option == tapOption)
-            analyserTap.push (block);
-
         switch (option)
         {
             case DSP_Option::Phaser:
@@ -532,6 +528,10 @@ void VST_1AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
                 jassertfalse;
                 break;
         }
+
+        // Capture the signal leaving the selected module, after it has been processed
+        if (option == tapOption)
+            analyserTap.push (block);
     }
 
     outputGain.process (context);

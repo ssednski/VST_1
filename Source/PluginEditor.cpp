@@ -147,24 +147,34 @@ void VST_1AudioProcessorEditor::selectModule (DSP_Option option)
 
 void VST_1AudioProcessorEditor::updateAnalyserPathDescription()
 {
-    // Describe what the signal has passed through before reaching the selected module.
+    // Describe what the signal has passed through, up to and including the selected module.
     // Bypassed modules are skipped because they don't change the signal.
     const juce::String arrow ("  >  ");
     juce::StringArray stages { "IN" };
+    bool selectedIsBypassed = false;
 
     for (auto option : chainView.getOrder())
     {
-        if (option == selectedModule)
-            break;
-
         auto bypassID = VST_1AudioProcessor::getBypassParamID (option);
-        if (audioProcessor.apvts.getRawParameterValue (bypassID)->load() < 0.5f)
+        auto bypassed = audioProcessor.apvts.getRawParameterValue (bypassID)->load() >= 0.5f;
+
+        if (! bypassed)
             stages.add (VST_1AudioProcessor::getDspOptionName (option));
+
+        if (option == selectedModule)
+        {
+            selectedIsBypassed = bypassed;
+            break;
+        }
     }
 
     auto description = stages.joinIntoString (arrow);
+
     if (stages.size() == 1)
         description << "  (dry input)";
+
+    if (selectedIsBypassed)
+        description << "  (" << VST_1AudioProcessor::getDspOptionName (selectedModule) << " bypassed)";
 
     analyser.setPathDescription (description);
 }
